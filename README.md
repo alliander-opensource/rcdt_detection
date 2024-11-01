@@ -10,7 +10,15 @@ This repository can be used for detecting objects with an RGBD-camera, currently
 
 # Usage
 
-This reposit
+This repository contains one service: `/detect_objects`. You can launch this service, and the required RealSense-node, using:
+```bash
+ros2 launch rcdt_detection detect.launch.py
+```
+
+Once the service is running, you can call it using:
+```bash
+ros2 service call /detect_objects rcdt_detection_interfaces/srv/DetectObjects {}
+```
 
 # License
 
