@@ -11,7 +11,9 @@ from cv_bridge import CvBridge
 cv_bridge = CvBridge()
 
 
-def ros_image_to_cv2_image(image_message: Image, desired_encoding: str = "passthrough") -> np.array:
+def ros_image_to_cv2_image(
+    image_message: Image, desired_encoding: str = "passthrough"
+) -> np.array:
     """Convert ROS image message to cv2 image."""
     return cv_bridge.imgmsg_to_cv2(image_message, desired_encoding=desired_encoding)
 

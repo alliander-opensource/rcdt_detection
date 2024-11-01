@@ -37,6 +37,7 @@ ros_logger = rclpy.logging.get_logger(__name__)
 @dataclasses.dataclass
 class ImageCoordinate:
     """Image coordinate where (0, 0) is at the top-left corner."""
+
     x: int
     y: int
 
@@ -46,13 +47,17 @@ class DetectionService(Node):
         super().__init__("detection_service")
 
         self.is_object_of_interest: Callable = is_object_of_interest
-        self.segmentation_model: ultralytics.engine.model.Model = load_segmentation_model()
+        self.segmentation_model: ultralytics.engine.model.Model = (
+            load_segmentation_model()
+        )
         self.intrinsics: rs2.intrinsics | None = None
 
         self.rgbd_topic: str = "/camera/camera/rgbd"
         self.time_to_wait: float = 2.0
         self.max_attempts: int = 3
-        self.service = self.create_service(DetectObjects, "detect_objects", self.detection_callback)
+        self.service = self.create_service(
+            DetectObjects, "detect_objects", self.detection_callback
+        )
 
     def detection_callback(self, _: None, response: PointList) -> PointList:
         """Gets RGBD image, detects objects, and returns them."""
@@ -65,7 +70,7 @@ class DetectionService(Node):
 
         centroid_image_coordinates = process_rgb_image(
             message=message.rgb,
-            segmentation_model=self.segmentation_model, 
+            segmentation_model=self.segmentation_model,
             is_object_of_interest=self.is_object_of_interest,
         )
         ros_logger.info(f"{centroid_image_coordinates}")
@@ -75,7 +80,7 @@ class DetectionService(Node):
         world_coordinates = process_depth_image(
             message=message.depth,
             image_coordinates=centroid_image_coordinates,
-            intrinsics=self.intrinsics
+            intrinsics=self.intrinsics,
         )
         ros_logger.info(f"{world_coordinates}")
         response.objects = PointList(points=world_coordinates)
@@ -84,10 +89,10 @@ class DetectionService(Node):
 
     def get_rgbd(self) -> RGBD:
         """Gets RGBD-message from the rgbd topic.
-        
+
         Raises:
             LookupError: if after `self.max_attempts` no message could be received.
-        
+
         """
         attempts = 0
         while attempts < self.max_attempts:
@@ -98,11 +103,13 @@ class DetectionService(Node):
                 time_to_wait=self.time_to_wait,
             )
             if success:
-                break            
+                break
             attempts += 1
         else:
             raise LookupError("unable to get message from RGBD topic")
-        ros_logger.info(f"Received RGBD message for frame '{message.header.frame_id}' stamped at {repr(message.header.stamp)}.")
+        ros_logger.info(
+            f"Received RGBD message for frame '{message.header.frame_id}' stamped at {repr(message.header.stamp)}."
+        )
         return message
 
 
@@ -122,7 +129,7 @@ def calculate_intrinsics(message: CameraInfo) -> rs2.intrinsics:
     elif message.distortion_model == "equidistant":
         intrinsics.model = rs2.distortion.kannala_brandt4
 
-    intrinsics.coeffs = [i for i in message.d]
+    intrinsics.coeffs = list(message.d)
 
     return intrinsics
 
@@ -137,7 +144,7 @@ def process_rgb_image(
     Object detection starts with segmenting the image. The result contains segmentation masks
     per object. For every segmented object it is determined whether it is an object of interest.
     If it is, the image coordinates of its centroid are calculated.
-    
+
     """
     rgb_image = ros_image_to_cv2_image(message)
 
@@ -158,14 +165,20 @@ def process_rgb_image(
     return centroid_image_coordinates
 
 
-def process_depth_image(message: Image, image_coordinates: Iterable[ImageCoordinate], intrinsics: rs2.intrinsics) -> list[Point]:
+def process_depth_image(
+    message: Image,
+    image_coordinates: Iterable[ImageCoordinate],
+    intrinsics: rs2.intrinsics,
+) -> list[Point]:
     """Calculate world coordinate relative to the camera of image coordinates."""
     depth_image = ros_image_to_cv2_image(message)
 
     world_coordinates = []
     for image_coordinate in image_coordinates:
         depth_value = depth_image[image_coordinate.y, image_coordinate.x]
-        x, y, z = rs2.rs2_deproject_pixel_to_point(intrinsics, [image_coordinate.x, image_coordinate.y], depth_value)
+        x, y, z = rs2.rs2_deproject_pixel_to_point(
+            intrinsics, [image_coordinate.x, image_coordinate.y], depth_value
+        )
         world_coordinates.append(Point(x=x, y=y, z=z))
 
     return world_coordinates
