@@ -11,11 +11,13 @@ from rcdt_utilities.launch_utils import get_file_path
 
 def generate_launch_description() -> LaunchDescription:
     detection_node = Node(
-                package="rcdt_detection",
-                executable="object_detection.py",
-            )
+        package="rcdt_detection",
+        executable="object_detection.py",
+    )
 
-    realsense_launch_description = get_file_path("realsense2_camera", ["launch"], "rs_launch.py")
+    realsense_launch_description = get_file_path(
+        "realsense2_camera", ["launch"], "rs_launch.py"
+    )
     realsense_node = IncludeLaunchDescription(
         realsense_launch_description,
         launch_arguments={
