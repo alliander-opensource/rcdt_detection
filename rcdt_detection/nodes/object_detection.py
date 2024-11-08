@@ -23,7 +23,7 @@ from rcdt_detection.image_manipulation import (
     segmentation_mask_to_binary_mask,
     single_to_three_channel,
 )
-from rcdt_detection.object_detectors import is_blue
+from rcdt_detection.object_detectors import is_brick
 from rcdt_detection.segmentation import (
     load_segmentation_model,
     segment_image,
@@ -196,7 +196,7 @@ def main(args: str = None) -> None:
     rclpy.init(args=args)
 
     try:
-        detection_service = DetectionService(is_object_of_interest=is_blue)
+        detection_service = DetectionService(is_object_of_interest=is_brick)
         rclpy.spin(detection_service)
     except Exception as e:
         ros_logger.error(e)
@@ -208,11 +208,3 @@ def main(args: str = None) -> None:
 
 if __name__ == "__main__":
     main()
-
-
-# rm -rf build/ install/ log/
-# colcon build --symlink-install
-# rosdep update
-# rosdep install --from-paths src --ignore-src --reinstall -y
-# source install/setup.bash
-# WARNING: The scripts f2py and numpy-config are installed in '/home/wp/.local/bin' which is not on PATH.
