@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from pathlib import Path
+
 import ultralytics
 import numpy as np
 
-SEGMENTATION_MODEL_PATH: str = "FastSAM-x.pt"
+SEGMENTATION_MODEL_PATH: str = str(Path.home() / "models" / "FastSAM-x.pt")
 
 
 def load_segmentation_model(
