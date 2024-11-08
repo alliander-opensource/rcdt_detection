@@ -5,7 +5,7 @@
 import ultralytics
 import numpy as np
 
-SEGMENTATION_MODEL_PATH: str = "/home/wp/projects/realsense/models/FastSAM-x.pt"
+SEGMENTATION_MODEL_PATH: str = "FastSAM-x.pt"
 
 
 def load_segmentation_model(
