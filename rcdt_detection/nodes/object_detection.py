@@ -28,8 +28,8 @@ from rcdt_detection.segmentation import (
     load_segmentation_model,
     segment_image,
 )
-from rcdt_detection_interfaces.msg import PointList
-from rcdt_detection_interfaces.srv import DetectObjects
+from rcdt_detection_msgs.msg import PointList
+from rcdt_detection_msgs.srv import DetectObjects
 
 ros_logger = rclpy.logging.get_logger(__name__)
 
