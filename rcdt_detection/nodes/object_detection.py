@@ -11,11 +11,12 @@ import cv2
 import numpy as np
 import pyrealsense2 as rs2
 import rclpy
-import ultralytics
+from ultralytics.engine.model import Model
 from geometry_msgs.msg import Point
 from realsense2_camera_msgs.msg import RGBD
 from rclpy import wait_for_message
 from rclpy.node import Node
+from rclpy.logging import get_logger
 from sensor_msgs.msg import Image, CameraInfo
 
 from rcdt_detection.image_manipulation import (
@@ -31,7 +32,7 @@ from rcdt_detection.segmentation import (
 from rcdt_detection_msgs.msg import PointList
 from rcdt_detection_msgs.srv import DetectObjects
 
-ros_logger = rclpy.logging.get_logger(__name__)
+ros_logger = get_logger(__name__)
 
 
 @dataclasses.dataclass
@@ -47,9 +48,7 @@ class DetectionService(Node):
         super().__init__("detection_service")
 
         self.is_object_of_interest: Callable = is_object_of_interest
-        self.segmentation_model: ultralytics.engine.model.Model = (
-            load_segmentation_model()
-        )
+        self.segmentation_model: Model = load_segmentation_model()
         self.intrinsics: rs2.intrinsics | None = None
 
         self.rgbd_topic: str = "/camera/camera/rgbd"
@@ -59,7 +58,9 @@ class DetectionService(Node):
             DetectObjects, "detect_objects", self.detection_callback
         )
 
-    def detection_callback(self, _: None, response: PointList) -> PointList:
+    def detection_callback(
+        self, _request: DetectObjects.Request, response: DetectObjects.Response
+    ) -> DetectObjects.Response:
         """Gets RGBD image, detects objects, and returns them."""
         try:
             message = self.get_rgbd()
@@ -107,6 +108,7 @@ class DetectionService(Node):
             attempts += 1
         else:
             raise LookupError("unable to get message from RGBD topic")
+        message: RGBD
         ros_logger.info(
             f"Received RGBD message for frame '{message.header.frame_id}' stamped at {repr(message.header.stamp)}."
         )
@@ -136,7 +138,7 @@ def calculate_intrinsics(message: CameraInfo) -> rs2.intrinsics:
 
 def process_rgb_image(
     message: Image,
-    segmentation_model: ultralytics.engine.model.Model,
+    segmentation_model: Model,
     is_object_of_interest: Callable,
 ) -> list[ImageCoordinate]:
     """Calculate image coordinates of centroids of detected objects.
@@ -155,6 +157,13 @@ def process_rgb_image(
     for mask in segmentation_result.masks:
         single_channel = segmentation_mask_to_binary_mask(mask)
         three_channel = single_to_three_channel(single_channel)
+
+        if rgb_image.shape != three_channel.shape:
+            ros_logger.error(
+                f"rgb_image and three_channel have different shapes: {rgb_image.shape} vs {three_channel.shape}. Returning empty list."
+            )
+            return centroid_image_coordinates
+
         masked_image = cv2.bitwise_and(rgb_image, three_channel)
 
         if is_object_of_interest(masked_image):
