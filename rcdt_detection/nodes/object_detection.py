@@ -19,7 +19,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 
 from rcdt_detection.image_manipulation import (
-    ros_image_to_cv2_image,
+    ros_image_to_cv2_image_sliced,
     segmentation_mask_to_binary_mask,
     single_to_three_channel,
 )
@@ -146,10 +146,8 @@ def process_rgb_image(
     If it is, the image coordinates of its centroid are calculated.
 
     """
-    rgb_image = ros_image_to_cv2_image(message)
-
+    rgb_image = ros_image_to_cv2_image_sliced(message)
     segmentation_result = segment_image(model=segmentation_model, image=rgb_image)
-    ros_logger.info(f"Segmented {len(segmentation_result.masks)} objects.")
 
     centroid_image_coordinates = []
     for mask in segmentation_result.masks:
@@ -171,7 +169,7 @@ def process_depth_image(
     intrinsics: rs2.intrinsics,
 ) -> list[Point]:
     """Calculate world coordinate relative to the camera of image coordinates."""
-    depth_image = ros_image_to_cv2_image(message)
+    depth_image = ros_image_to_cv2_image_sliced(message)
 
     world_coordinates = []
     for image_coordinate in image_coordinates:
