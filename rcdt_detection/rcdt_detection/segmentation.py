@@ -3,23 +3,30 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
+from typing import Literal
 
-import ultralytics
+from ultralytics.engine.model import Model
+from ultralytics.engine.results import Results
+from ultralytics import FastSAM, SAM
 import numpy as np
 
-SEGMENTATION_MODEL_PATH: str = str(Path.home() / "models" / "FastSAM-x.pt")
+PATH_FASTSAM: str = str(Path.home() / "models" / "FastSAM-x.pt")
+PATH_SAM2: str = str(Path.home() / "models" / "sam2.1_b.pt")
 
 
-def load_segmentation_model(
-    model_path: str = SEGMENTATION_MODEL_PATH,
-) -> ultralytics.engine.model.Model:
+def load_segmentation_model(model: Literal["SAM2", "FastSAM"] = "FastSAM") -> Model:
     """Load segmentation model from given path."""
-    return ultralytics.FastSAM(model_path)
+    match model:
+        case "FastSAM":
+            return FastSAM(PATH_FASTSAM)
+        case "SAM2":
+            return SAM(PATH_SAM2)
 
 
-def segment_image(
-    model: ultralytics.engine.model.Model, image: np.array
-) -> ultralytics.engine.results.Results:
+def segment_image(model: Model, image: np.ndarray) -> Results:
     """Segment given image using given model."""
-    height, width, _ = image.shape
-    return model(image, imgsz=(height, width))[0]
+    if isinstance(model, FastSAM):
+        height, width, _ = image.shape
+        return model(image, imgsz=(height, width))[0]
+    if isinstance(model, SAM):
+        return model(image)[0]

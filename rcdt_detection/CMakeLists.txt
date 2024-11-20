@@ -22,6 +22,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install nodes
 install(PROGRAMS
   nodes/object_detection.py
+  nodes/segment_image_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

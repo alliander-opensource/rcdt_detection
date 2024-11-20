@@ -8,12 +8,14 @@ project(rcdt_detection_msgs)
 
 find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/PointList.msg
   srv/DetectObjects.srv
-  DEPENDENCIES geometry_msgs
+  srv/SegmentImage.srv
+  DEPENDENCIES geometry_msgs sensor_msgs
 )
 
 if(BUILD_TESTING)
