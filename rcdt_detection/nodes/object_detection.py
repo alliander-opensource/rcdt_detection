@@ -182,7 +182,7 @@ def process_depth_image(
     return world_coordinates
 
 
-def get_centroid_image_coordinates(mask: np.array) -> ImageCoordinate:
+def get_centroid_image_coordinates(mask: np.ndarray) -> ImageCoordinate:
     """Get image coordinate of centroid of object in mask."""
     moments = cv2.moments(mask)
     centroid_x = int(moments["m10"] / moments["m00"])

@@ -46,7 +46,7 @@ def ros_image_to_cv2_image_sliced(
 
 
 def segmentation_mask_to_binary_mask(mask: torch.Tensor) -> ndarray:
-    """Convert given mask to np.array with range [0, 255], dtype=uint8, and dimensions [height, width, channels]."""
+    """Convert given mask to np.ndarray with range [0, 255], dtype=uint8, and dimensions [height, width, channels]."""
     binary_mask = mask.data.cpu().numpy().astype(uint8)
     binary_mask = binary_mask * 255
     binary_mask = binary_mask.transpose(1, 2, 0)
