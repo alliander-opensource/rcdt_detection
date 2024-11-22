@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 sensor_msgs/Image image
-bool publish
+bool visualize
 ---
 sensor_msgs/Image image
 bool success

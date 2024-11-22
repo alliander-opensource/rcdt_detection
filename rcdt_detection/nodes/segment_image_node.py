@@ -14,32 +14,37 @@ from rcdt_detection.image_manipulation import (
     ros_image_to_cv2_image,
 )
 
+ros_logger = rclpy.logging.get_logger(__name__)
+
 
 class SegmentImageNode(Node):
     def __init__(self) -> None:
         super().__init__("segment_image")
+        self.declare_parameter("model_name", "")
+        model_name = self.get_parameter("model_name").get_parameter_value().string_value
+
         self.create_service(SegmentImage, "segment_image", self.callback)
 
         self.pub_input = self.create_publisher(Image, "~/input", 10)
         self.pub_output = self.create_publisher(Image, "~/output", 10)
-        self.model = load_segmentation_model("SAM2")
+        self.model = load_segmentation_model(model_name)
 
     def callback(
         self, request: SegmentImage.Request, response: SegmentImage.Response
     ) -> SegmentImage.Response:
-        im_input = request.image
-        encoding = im_input.encoding
+        """Segments"""
+        input_image = request.image
 
-        if request.publish:
-            self.pub_input.publish(im_input)
+        if request.visualize:
+            self.pub_input.publish(input_image)
 
-        self.get_logger().info("Start segmentation...")
-        result = segment_image(self.model, ros_image_to_cv2_image(im_input))
-        self.get_logger().info("Finished segmentation!")
+        ros_logger.info("Start segmentation...")
+        result = segment_image(self.model, ros_image_to_cv2_image(input_image))
+        ros_logger.info("Finished segmentation!")
 
-        if request.publish:
-            im_output = result.plot(labels=False, boxes=False, conf=False)
-            self.pub_output.publish(cv2_image_to_ros_image(im_output, encoding))
+        if request.visualize:
+            output_image = result.plot(labels=False, boxes=False, conf=False)
+            self.pub_output.publish(cv2_image_to_ros_image(output_image))
 
         response.success = True
         return response
